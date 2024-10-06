@@ -73,4 +73,20 @@ router.post("/insertar_sitios", async (req: Request, res: Response) => {
   }
 });
 
+router.get("/sitios/:KioskId", async (req: Request, res: Response) => {
+  try {
+    const KioskId = req.params.KioskId as string;
+    const sitio = await SITIOSMODEL.findOne({ KioskId: KioskId });
+    if (!sitio) {
+      res.status(404).json({ error: "Sitio no encontrado" });
+      return;
+    }
+    res.status(200).json(sitio);
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+});
+
 export default router;
