@@ -349,4 +349,45 @@ router.delete("/reporte/:id", async (req: Request, res: Response) => {
   }
 });
 
+interface InfoReportePersonal {
+  _id: string;
+  KioskId: number;
+  fecha: string;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  name_tecnico: string;
+}
+
+router.get("/reportes/personal", async (req: Request, res: Response) => {
+  try {
+    const reportes = await REPORTE_TRABAJO_MODEL.find(
+      {},
+      { KioskId: 1, fecha: 1, name_tecnico: 1 }
+    );
+    const sitios = await SITIOSMODEL.find(
+      { KioskId: { $in: reportes.map((reporte) => reporte.KioskId) } },
+      { KioskId: 1, address: 1, city: 1, state: 1, zip_code: 1 }
+    );
+    const reportesConSitio = reportes.map((reporte) => {
+      const sitio = sitios.find((s) => s.KioskId === reporte.KioskId);
+      return {
+        _id: reporte._id,
+        KioskId: reporte.KioskId,
+        fecha: moment(reporte.fecha).format("YYYY-MM-DD"),
+        address: sitio?.address || "",
+        city: sitio?.city || "",
+        state: sitio?.state || "",
+        zipCode: sitio?.zip_code || "",
+        name_tecnico: reporte.name_tecnico,
+      };
+    });
+    res.status(200).json(reportesConSitio);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
 export default router;
