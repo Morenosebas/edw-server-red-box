@@ -73,7 +73,7 @@ router.post(
           // Procesa la imagen con Sharp
           await sharp(buffer)
             .resize(800, 800, {
-              fit: sharp.fit.contain,
+              fit: sharp.fit.fill,
               withoutEnlargement: true,
             })
             .toFormat("webp") // Convertir a webp
@@ -187,8 +187,7 @@ router.patch(
             // Procesar la imagen con Sharp
             await sharp(buffer)
               .resize(800, 800, {
-                fit: sharp.fit.contain,
-                withoutEnlargement: true,
+                fit: sharp.fit.fill,
               })
               .toFormat("webp") // Convertir a webp
               .webp({ quality: 90 }) // Calidad del 90%
