@@ -65,4 +65,15 @@ router.post("/login", async (req: Request, res: Response) => {
   }
 });
 
+router.get("/tecnicos", async (req: Request, res: Response) => {
+  try {
+    const users = await USERMODEL.find({}, { name: 1 });
+    res.status(200).json({ users: users.map((user) => user.name) });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+});
+
 export default router;

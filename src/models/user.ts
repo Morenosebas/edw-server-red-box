@@ -12,5 +12,5 @@ const UserSchema = new Schema({
   password: { type: String, required: true },
 });
 
-const USERMODEL = models.User || model<UserIModel>("User", UserSchema);
+const USERMODEL = model<UserIModel>("User", UserSchema) || models.User;
 export default USERMODEL;

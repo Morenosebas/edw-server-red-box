@@ -81,7 +81,17 @@ router.get("/sitios/:KioskId", async (req: Request, res: Response) => {
       res.status(404).json({ error: "Sitio no encontrado" });
       return;
     }
-    res.status(200).json(sitio);
+    res.status(200).json({ sitio: sitio.toJSON() });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+});
+router.get("/kiosks", async (req: Request, res: Response) => {
+  try {
+    const kiosks = await SITIOSMODEL.find({}, { KioskId: 1 });
+    res.status(200).json({ kiosks: kiosks.map((kiosk) => kiosk.KioskId) });
   } catch (error) {
     if (error instanceof Error) {
       res.status(400).json({ error: error.message });
