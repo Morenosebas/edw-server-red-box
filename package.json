@@ -5,10 +5,20 @@
   "main": "/dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node dist/index.js",
+    "start": "node dist/src/index.js",
     "dev": "nodemon src/index.ts",
-    "build": "tsc -p ./src",
+    "build": "tsc -p .",
     "bun:start": "bun --hot run src/index.ts"
+  },
+  "_moduleAliases": {
+    "@": "dist/src",
+    "@models": "dist/src/models",
+    "@controllers": "dist/src/controllers",
+    "@services": "dist/src/services",
+    "@middlewares": "dist/src/middlewares",
+    "@routes": "dist/src/routes",
+    "@config": "dist/src/config",
+    "@mongo": "dist/src/mongo"
   },
   "author": "",
   "license": "ISC",
@@ -19,12 +29,15 @@
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "jsonwebtoken": "^9.0.2",
+    "module-alias": "^2.2.3",
     "moment-timezone": "^0.5.45",
     "moments": "^0.0.2",
     "mongoose": "^8.7.0",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
+    "puppeteer": "^23.5.0",
     "sharp": "^0.33.5",
+    "util": "^0.12.5",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

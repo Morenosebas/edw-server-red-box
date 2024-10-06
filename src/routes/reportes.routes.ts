@@ -11,6 +11,7 @@ import fs from "fs";
 import moment from "moment";
 import mongoose from "mongoose";
 import SITIOSMODEL from "@/models/sitios";
+import puppeteer, { Browser } from "puppeteer";
 
 const router = Router();
 
@@ -387,6 +388,60 @@ router.get("/reportes/personal", async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+import { promisify } from "util";
+
+const unlinkAsync = promisify(fs.unlink);
+
+router.get("/reportes/pdf/:id", async (req: Request, res: Response) => {
+  let browser: Browser | null = null;
+  try {
+    const { id } = req.params;
+
+    // Lanzar Puppeteer
+    browser = await puppeteer.launch({
+      headless: true, // Cambia a 'false' si quieres ver la operación de Puppeteer
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      timeout: 60000 * 5,
+    });
+
+    const page = await browser.newPage();
+    await page.goto(`http://localhost:3003/reporteCarta/${id}`, {
+      waitUntil: "networkidle0",
+    });
+
+    // Generar el PDF y guardarlo en un archivo temporal
+    const pdfPath = path.join(__dirname, `report_${id}.pdf`);
+    await page.pdf({
+      path: pdfPath, // Guardar el PDF en la ruta especificada
+      format: "LETTER",
+      printBackground: true,
+      waitForFonts: true,
+    });
+
+    // Descargar el archivo PDF
+    res.download(pdfPath, `report_${id}.pdf`, async (err) => {
+      if (err) {
+        console.error("Error al descargar el archivo:", err);
+        res.status(500).json({ error: "Error al descargar el archivo" });
+      }
+
+      // Eliminar el archivo temporal después de la descarga
+      try {
+        await unlinkAsync(pdfPath);
+      } catch (error) {
+        console.error("Error al eliminar el archivo:", error);
+      }
+    });
+  } catch (error) {
+    console.error("Error generando el PDF:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
   }
 });
 

@@ -1,12 +1,12 @@
-dotenv.config({
-  path: "./env/.env",
-});
+import 'module-alias/register'; 
 import express from "express";
 import dotenv from "dotenv";
 import morgan from "morgan";
-import db from "@/mongo/mongo";
+import db from "@mongo/mongo";
 import cors from "cors";
 import momentz from "moment-timezone";
+db();
+dotenv.config();
 
 momentz.tz.setDefault("America/New_York");
 db();
