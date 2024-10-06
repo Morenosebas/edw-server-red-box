@@ -10,6 +10,7 @@ import path from "path";
 import fs from "fs";
 import moment from "moment";
 import mongoose from "mongoose";
+import SITIOSMODEL from "@/models/sitios";
 
 const router = Router();
 
@@ -232,7 +233,6 @@ router.patch(
         { $set: actualizaciones },
         { new: true } // Para devolver el documento actualizado
       );
-
       res.status(200).json(reporteActualizado);
     } catch (error) {
       console.error(error);
@@ -240,5 +240,63 @@ router.patch(
     }
   }
 );
+
+router.get("/reporte/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const reporte = await REPORTE_TRABAJO_MODEL.findById(id);
+    if (!reporte) {
+      res.status(404).json({ error: "Reporte no encontrado" });
+      return;
+    }
+    const sitio = await SITIOSMODEL.findOne({
+      KioskId: reporte.KioskId,
+    });
+    if (!sitio) {
+      res.status(404).json({ error: "Sitio no encontrado" });
+      return;
+    }
+
+    const response: {
+      reporte: {
+        KioskId: string;
+        fecha: string;
+        PictBOX?: string;
+        PictBef?: string;
+        PictDef?: string;
+        PictAft?: string;
+        nota: string;
+        name_tecnico: string;
+        address: string;
+        city: string;
+        state: string;
+        zip: string;
+        code: number;
+        store_id: string;
+      };
+    } = {
+      reporte: {
+        KioskId: reporte.KioskId,
+        fecha: moment(reporte.fecha).format("YYYY-MM-DD"),
+        PictBOX: reporte.PictBOX,
+        PictBef: reporte.PictBef,
+        PictDef: reporte.PictDef,
+        PictAft: reporte.PictAft,
+        nota: reporte.nota,
+        name_tecnico: reporte.name_tecnico,
+        address: sitio.address,
+        city: sitio.city,
+        state: sitio.state,
+        zip: sitio.zip_code,
+        code: reporte.code,
+        store_id: sitio.store_id,
+      },
+    };
+    res.status(200).json(response);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
 
 export default router;

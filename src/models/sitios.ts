@@ -50,5 +50,5 @@ const SitiosSchema = new Schema<SitiosModel>({
   tienda_nombre: { type: String },
 });
 
-const SITIOSMODEL = models.Sitios || model<SitiosModel>("Sitios", SitiosSchema);
+const SITIOSMODEL = model<SitiosModel>("Sitios", SitiosSchema) || models.Sitios;
 export default SITIOSMODEL;

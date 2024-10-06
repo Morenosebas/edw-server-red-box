@@ -8,6 +8,7 @@ export interface ReporteTrabajo {
   PictAft: string;
   nota: string;
   name_tecnico: string;
+  code: number;
 }
 export type ReporteTrabajoModel = ReporteTrabajo & Document;
 
@@ -20,6 +21,21 @@ const ReporteTrabajoSchema = new Schema<ReporteTrabajoModel>({
   PictAft: { type: String },
   nota: { type: String },
   name_tecnico: { type: String, required: true },
+  code: {
+    type: Number,
+    unique: true,
+  },
+});
+
+ReporteTrabajoSchema.pre("save", async function (next) {
+  const reporte = this as ReporteTrabajoModel;
+  if (reporte.isNew) {
+    const lastReporte = await REPORTE_TRABAJO_MODEL.findOne().sort({
+      code: -1,
+    });
+    reporte.code = lastReporte ? lastReporte.code + 1 : 1;
+  }
+  next();
 });
 
 const REPORTE_TRABAJO_MODEL =

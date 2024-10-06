@@ -3,6 +3,7 @@ import type { Request, Response } from "express";
 import { Router } from "express";
 import USERMODEL from "@models/user";
 import brcypt from "bcrypt";
+import jsonwebtoken from "jsonwebtoken";
 const router = Router();
 
 const comparePassword = async (password: string, hash: string) => {
@@ -52,8 +53,11 @@ router.post("/login", async (req: Request, res: Response) => {
     if (!isMatch) {
       throw new Error("Invalid password");
     }
-    res.cookie("user", user.username);
-    res.status(200).json(user);
+    const token = await jsonwebtoken.sign(
+      { id: user._id, name: user.name, username: user.username },
+      "mysecret"
+    );
+    res.status(200).json({ token });
   } catch (error) {
     if (error instanceof Error) {
       res.status(400).json({ error: error.message });

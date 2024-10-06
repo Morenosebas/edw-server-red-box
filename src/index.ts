@@ -19,6 +19,8 @@ app.use(morgan("dev"));
 
 app.use(express.json());
 
+import imagesRoutes from "@routes/images.routes";
+app.use("/api", imagesRoutes);
 import userRoutes from "@routes/user.routes";
 app.use("/api", userRoutes);
 import sitiosRoutes from "@routes/sitios.routes";
