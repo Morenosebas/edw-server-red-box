@@ -7,7 +7,7 @@ import fs from "fs/promises";
 const router = Router();
 
 //insertar sitios desde un xlsx a la base de datos
-router.post("/insert_sitios", async (req: Request, res: Response) => {
+router.post("/insertar_sitios", async (req: Request, res: Response) => {
   try {
     const doc = await fs.readFile(
       "/home/conteo/Desktop/Personal/edw-REDBOX/src/file/xlsx/fx.xlsx"

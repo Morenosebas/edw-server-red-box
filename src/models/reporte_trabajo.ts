@@ -1,5 +1,4 @@
 import { Schema, model, models, Document } from "mongoose";
-
 export interface ReporteTrabajo {
   KioskId: string;
   fecha: Date;
@@ -15,16 +14,16 @@ export type ReporteTrabajoModel = ReporteTrabajo & Document;
 const ReporteTrabajoSchema = new Schema<ReporteTrabajoModel>({
   KioskId: { type: String, required: true },
   fecha: { type: Date, required: true },
-  PictBOX: { type: String, required: true },
-  PictBef: { type: String, required: true },
-  PictDef: { type: String, required: true },
-  PictAft: { type: String, required: true },
-  nota: { type: String, required: true },
+  PictBOX: { type: String },
+  PictBef: { type: String },
+  PictDef: { type: String },
+  PictAft: { type: String },
+  nota: { type: String },
   name_tecnico: { type: String, required: true },
 });
 
 const REPORTE_TRABAJO_MODEL =
-  models.ReporteTrabajo ||
-  model<ReporteTrabajoModel>("ReporteTrabajo", ReporteTrabajoSchema);
+  model<ReporteTrabajoModel>("ReporteTrabajo", ReporteTrabajoSchema) ||
+  models.ReporteTrabajo;
 
 export default REPORTE_TRABAJO_MODEL;
