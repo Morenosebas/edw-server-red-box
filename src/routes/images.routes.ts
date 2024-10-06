@@ -12,7 +12,7 @@ const router = Router();
 // Nueva ruta para servir imágenes
 router.get("/imagen/:src", async (req: Request, res: Response) => {
   try {
-    const encodedPath = req.query.src as string;
+    const encodedPath = req.params.src as string;
 
     // Verifica que el parámetro 'path' exista y sea una cadena
     if (!encodedPath || typeof encodedPath !== "string") {
@@ -25,6 +25,7 @@ router.get("/imagen/:src", async (req: Request, res: Response) => {
 
     // Decodifica el 'path' desde Base64 usando Buffer
     let decodedPath: string;
+    console.log("encodedPath", encodedPath);
     try {
       decodedPath = Buffer.from(encodedPath, "base64").toString("utf-8");
     } catch (decodeError) {
