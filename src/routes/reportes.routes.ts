@@ -329,6 +329,7 @@ router.get("/reportes", async (req: Request, res: Response) => {
         name_tecnico: reporte.name_tecnico,
         code: reporte.code,
         store_id: sitio?.store_id,
+        address: sitio?.address,
         _id: reporte._id,
       };
     });
