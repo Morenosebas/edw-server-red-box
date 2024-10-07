@@ -30,7 +30,7 @@ router.post(
     // Tipo de retorno void
     try {
       // Extrae los datos del cuerpo de la solicitud
-      const { KioskId, nota, name_tecnico } = req.body;
+      const { KioskId, nota, name_tecnico, field } = req.body;
 
       // Verifica que los archivos estén presentes
       if (!req.files) {
@@ -99,6 +99,7 @@ router.post(
         PictBef: processedFiles["PictBef"] || null,
         PictDef: processedFiles["PictDef"] || null,
         PictAft: processedFiles["PictAft"] || null,
+        field: field || "",
       });
 
       // Guarda en la base de datos
@@ -135,7 +136,7 @@ router.patch(
       }
 
       // Extraer los campos que se pueden actualizar del cuerpo de la solicitud
-      const { nota, name_tecnico } = req.body;
+      const { nota, name_tecnico, field } = req.body;
 
       // Crear un objeto para almacenar las actualizaciones
       const actualizaciones: Partial<{
@@ -145,6 +146,7 @@ router.patch(
         PictBef: string;
         PictDef: string;
         PictAft: string;
+        field: string;
       }> = {};
 
       // Actualizar los campos permitidos si están presentes
@@ -152,6 +154,7 @@ router.patch(
       if (name_tecnico !== undefined)
         actualizaciones.name_tecnico = name_tecnico;
 
+      if (field !== undefined) actualizaciones.field = field;
       // Verificar si se han subido archivos
       if (req.files) {
         const files = req.files as {
@@ -274,6 +277,7 @@ router.get("/reporte/:id", async (req: Request, res: Response) => {
         code: number;
         store_id: string;
         _id: string;
+        field: string;
       };
     } = {
       reporte: {
@@ -292,6 +296,7 @@ router.get("/reporte/:id", async (req: Request, res: Response) => {
         zip: sitio.zip_code,
         code: reporte.code,
         store_id: sitio.store_id,
+        field: reporte?.field || "",
       },
     };
     res.status(200).json(response);

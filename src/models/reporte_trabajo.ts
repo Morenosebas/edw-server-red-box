@@ -9,6 +9,7 @@ export interface ReporteTrabajo {
   nota: string;
   name_tecnico: string;
   code: number;
+  field: string;
 }
 export type ReporteTrabajoModel = ReporteTrabajo & Document;
 
@@ -25,6 +26,7 @@ const ReporteTrabajoSchema = new Schema<ReporteTrabajoModel>({
     type: Number,
     unique: true,
   },
+  field: String,
 });
 
 ReporteTrabajoSchema.pre("save", async function (next) {
