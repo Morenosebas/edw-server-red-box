@@ -140,7 +140,7 @@ router.patch(
       }
 
       // Extraer los campos que se pueden actualizar del cuerpo de la solicitud
-      const { nota, name_tecnico, field, fecha } = req.body;
+      const { nota, name_tecnico, field:fieldChange, fecha } = req.body;
 
       // Crear un objeto para almacenar las actualizaciones
       const actualizaciones: Partial<{
@@ -158,14 +158,14 @@ router.patch(
       if (nota !== undefined) actualizaciones.nota = nota;
       if (name_tecnico !== undefined)
         actualizaciones.name_tecnico = name_tecnico;
-      if (fecha !== undefined) actualizaciones.fecha = fecha;
-      if (field !== undefined) actualizaciones.field = field;
+
+      if (fieldChange !== undefined) actualizaciones.field = fieldChange;
       // Verificar si se han subido archivos
       if (req.files) {
         const files = req.files as {
           [fieldname: string]: Express.Multer.File[];
         };
-
+        console.log("field", fieldChange)
         for (const field in files) {
           const fileArray = files[field];
           if (fileArray && fileArray.length > 0) {
