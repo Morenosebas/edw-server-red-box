@@ -316,7 +316,7 @@ router.get("/reportes", async (req: Request, res: Response) => {
     );
     const sitios = await SITIOSMODEL.find(
       { KioskId: { $in: reportes.map((reporte) => reporte.KioskId) } },
-      { KioskId: 1, store_id: 1 }
+      { KioskId: 1, store_id: 1 ,address: 1}
     );
     console.log(sitios);
     const reportesConSitio = reportes.map((reporte) => {
