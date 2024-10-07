@@ -283,6 +283,7 @@ router.get("/reporte/:id", async (req: Request, res: Response) => {
         store_id: string;
         _id: string;
         field: string;
+        ParentName:string
       };
     } = {
       reporte: {
@@ -302,6 +303,7 @@ router.get("/reporte/:id", async (req: Request, res: Response) => {
         code: reporte.code,
         store_id: sitio.store_id,
         field: reporte?.field || "",
+        ParentName:sitio.ParentName as string
       },
     };
     res.status(200).json(response);
@@ -483,7 +485,7 @@ router.get("/reportes/pdf/:id", async (req: Request, res: Response) => {
     });
 
     const page = await browser.newPage();
-    await page.goto(`http://localhost:3003/reporteCarta/${id}`, {
+    await page.goto(`http://localhost:3003/redbox/reporteCarta/${id}`, {
       waitUntil: "networkidle0",
     });
     const reporte = await REPORTE_TRABAJO_MODEL.findById(id);
@@ -575,7 +577,7 @@ router.get("/reportes/pdf", async (req: Request, res: Response) => {
         timeout: 60000 * 5,
       });
       const page = await browser.newPage();
-      await page.goto(`http://localhost:3003/reporteCarta/${reporte._id}`, {
+      await page.goto(`http://localhost:3003/redbox/reporteCarta/${reporte._id}`, {
         waitUntil: "networkidle0",
       });
       const pdfPath = path.join(__dirname, `report_${reporte._id}.pdf`);

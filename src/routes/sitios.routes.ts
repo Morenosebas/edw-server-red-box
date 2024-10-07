@@ -8,10 +8,10 @@ import REPORTE_TRABAJO_MODEL from "@/models/reporte_trabajo";
 const router = Router();
 
 //insertar sitios desde un xlsx a la base de datos
-router.post("/insertar_sitios", async (req: Request, res: Response) => {
+router.get("/insertar_sitios", async (req: Request, res: Response) => {
   try {
     const doc = await fs.readFile(
-      "/home/conteo/Desktop/Personal/edw-REDBOX/src/file/xlsx/fx.xlsx"
+      "/home/edwin/Desktop/edw-server-red-box/src/routes/Walmart_Dollar General - Red Box Removal - Store List.xlsx"
     );
     const workbook = xlsx.read(doc, { type: "buffer" });
     const sheet_name_list = workbook.SheetNames;
@@ -56,6 +56,7 @@ router.post("/insertar_sitios", async (req: Request, res: Response) => {
       };
       // if (!site.Zip) console.log("sitio ", index, site);
       sitios.push({
+        ParentName:site["Brand"] as string,
         address: site[address] as string,
         city: site[city] as string,
         KioskId: site[kioskId].toString() as string,

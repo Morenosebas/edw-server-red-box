@@ -19,15 +19,15 @@ app.use(morgan("dev"));
 app.use(express.json());
 
 import imagesRoutes from "@routes/images.routes";
-app.use("/api", imagesRoutes);
+app.use("/redbox/api", imagesRoutes);
 import userRoutes from "@routes/user.routes";
-app.use("/api", userRoutes);
+app.use("/redbox/api", userRoutes);
 import sitiosRoutes from "@routes/sitios.routes";
-app.use("/api", sitiosRoutes);
+app.use("/redbox/api", sitiosRoutes);
 import reportesRoutes from "@routes/reportes.routes";
-app.use("/api", reportesRoutes);
+app.use("/redbox/api", reportesRoutes);
 
-app.get("/", (req, res) => {
+app.get("/redbox/api", (req, res) => {
   res.send("Hello World");
 });
 

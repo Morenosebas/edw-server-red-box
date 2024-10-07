@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 
 const MONGODB_URI =
   process.env.MONGODB_URI ||
-  "mongodb+srv://myAtlasDBUser:Mazo2001@cluster0.macmdp1.mongodb.net/edw-redbox?retryWrites=true&w=majority&appName=Cluster0";
+  "mongodb://localhost:27017/edw-red-box";
 
 const connectToDatabase = async () => {
   try {
