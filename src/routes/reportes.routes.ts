@@ -509,7 +509,20 @@ router.get("/reportes/pdf", async (req: Request, res: Response) => {
       name: string;
     };
     const query =
-      decode.username === "EdwinR" ? {} : { name_tecnico: decode.name };
+      decode.username === "EdwinR"
+        ? {
+            fecha: {
+              $gte: minDateMoment?.toDate(),
+              $lte: maxDateMoment?.toDate(),
+            },
+          }
+        : {
+            name_tecnico: decode.name,
+            fecha: {
+              $gte: minDateMoment?.toDate(),
+              $lte: maxDateMoment?.toDate(),
+            },
+          };
 
     const reportes = await REPORTE_TRABAJO_MODEL.find(query, {
       KioskId: 1,
