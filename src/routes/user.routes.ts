@@ -4,6 +4,7 @@ import { Router } from "express";
 import USERMODEL from "@models/user";
 import brcypt from "bcrypt";
 import jsonwebtoken from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 const router = Router();
 
 const comparePassword = async (password: string, hash: string) => {
@@ -13,27 +14,38 @@ const hashPassword = async (password: string) => {
   return await brcypt.hash(password, 10);
 };
 
-router.post("/insert_users", async (req: Request, res: Response) => {
-  const names = req.body.names as {
-    name: string;
-  }[];
+router.get("/insert_users", async (req: Request, res: Response) => {
+  const users = [
+    { name: "Yackey", lastName: "Delgado", password: "1234" },
+    { name: "Reinel", lastName: "Patino", password: "5678" },
+    { name: "Omar", lastName: "Romero", password: "9101" },
+    { name: "Alexander", lastName: "Bastidas", password: "2345" },
+    { name: "Jhon", lastName: "Araujo", password: "6789" },
+    { name: "Jose", lastName: "Valero", password: "3456" },
+    { name: "Jesus", lastName: "Jurado", password: "7890" },
+    { name: "Jairo", lastName: "Ramirez", password: "4567" },
+    { name: "Edwin", lastName: "Romero", password: "8901" },
+    { name: "Pedro", lastName: "Jurado", password: "5678" },
+  ];
+
   try {
-    const users = names.map(async (name) => {
-      const username = name.name.split(" ")[0] + name.name.split(" ")[1][0];
-      if (!name.name.includes("Edwin")) {
+    const createdUsers = await Promise.all(
+      users.map(async (user) => {
+        const username = `${user.name}${user.lastName.charAt(0)}`;
+        const hashedPassword = await hashPassword(user.password);
+
         return await USERMODEL.create({
-          name: name.name,
+          name: user.name,
           username: username,
-          password: await hashPassword(username),
+          password: hashedPassword,
+          role: "USER", // Asegurando que no sean admins
         });
-      } else {
-        return await USERMODEL.create({
-          name: name.name,
-          username: "admin",
-          password: await hashPassword("admin"),
-        });
-      }
-    });
+      })
+    );
+
+    res
+      .status(201)
+      .json({ message: "Users created successfully", users: createdUsers });
   } catch (error) {
     if (error instanceof Error) {
       res.status(400).json({ error: error.message });
@@ -67,7 +79,22 @@ router.post("/login", async (req: Request, res: Response) => {
 
 router.get("/tecnicos", async (req: Request, res: Response) => {
   try {
-    const users = await USERMODEL.find({}, { name: 1 });
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      res.status(401).json({ error: "No autorizado" });
+      return;
+    }
+    const decode = jwt.decode(token) as {
+      username: string;
+      name: string;
+    };
+    if (!decode) {
+      res.status(401).json({ error: "No autorizado" });
+      return;
+    }
+    const query =
+      decode.username === "EdwinR" ? {} : { username: decode.username };
+    const users = await USERMODEL.find(query, { name: 1 });
     res.status(200).json({ users: users.map((user) => user.name) });
   } catch (error) {
     if (error instanceof Error) {

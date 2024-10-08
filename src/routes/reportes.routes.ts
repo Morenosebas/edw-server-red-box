@@ -12,6 +12,7 @@ import moment from "moment";
 import mongoose from "mongoose";
 import SITIOSMODEL from "@/models/sitios";
 import puppeteer, { Browser } from "puppeteer";
+import jwt from "jsonwebtoken";
 
 const router = Router();
 
@@ -310,15 +311,29 @@ router.get("/reporte/:id", async (req: Request, res: Response) => {
 
 router.get("/reportes", async (req: Request, res: Response) => {
   try {
-    const reportes = await REPORTE_TRABAJO_MODEL.find(
-      {},
-      { KioskId: 1, fecha: 1, nota: 1, name_tecnico: 1, code: 1 }
-    );
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      res.status(401).json({ error: "No autorizado" });
+      return;
+    }
+    const decode = jwt.decode(token) as {
+      username: string;
+      name: string;
+    };
+
+    const query =
+      decode.username === "EdwinR" ? {} : { name_tecnico: decode.name };
+    const reportes = await REPORTE_TRABAJO_MODEL.find(query, {
+      KioskId: 1,
+      fecha: 1,
+      nota: 1,
+      name_tecnico: 1,
+      code: 1,
+    });
     const sitios = await SITIOSMODEL.find(
       { KioskId: { $in: reportes.map((reporte) => reporte.KioskId) } },
-      { KioskId: 1, store_id: 1 ,address: 1}
+      { KioskId: 1, store_id: 1, address: 1 }
     );
-    console.log(sitios);
     const reportesConSitio = reportes.map((reporte) => {
       const sitio = sitios.find((s) => s.KioskId === reporte.KioskId);
 
@@ -369,10 +384,23 @@ interface InfoReportePersonal {
 
 router.get("/reportes/personal", async (req: Request, res: Response) => {
   try {
-    const reportes = await REPORTE_TRABAJO_MODEL.find(
-      {},
-      { KioskId: 1, fecha: 1, name_tecnico: 1 }
-    );
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      res.status(401).json({ error: "No autorizado" });
+      return;
+    }
+    const decode = jwt.decode(token) as {
+      username: string;
+      name: string;
+    };
+    const query =
+      decode.username === "EdwinR" ? {} : { name_tecnico: decode.name };
+
+    const reportes = await REPORTE_TRABAJO_MODEL.find(query, {
+      KioskId: 1,
+      fecha: 1,
+      name_tecnico: 1,
+    });
     const sitios = await SITIOSMODEL.find(
       { KioskId: { $in: reportes.map((reporte) => reporte.KioskId) } },
       { KioskId: 1, address: 1, city: 1, state: 1, zip_code: 1 }
