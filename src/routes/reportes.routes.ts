@@ -488,10 +488,23 @@ import JSZip from "jszip";
 
 router.get("/reportes/pdf", async (req: Request, res: Response) => {
   try {
-    const reportes = await REPORTE_TRABAJO_MODEL.find(
-      {},
-      { KioskId: 1, fecha: 1, name_tecnico: 1 }
-    );
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      res.status(401).json({ error: "No autorizado" });
+      return;
+    }
+    const decode = jwt.decode(token) as {
+      username: string;
+      name: string;
+    };
+    const query =
+      decode.username === "EdwinR" ? {} : { name_tecnico: decode.name };
+
+    const reportes = await REPORTE_TRABAJO_MODEL.find(query, {
+      KioskId: 1,
+      fecha: 1,
+      name_tecnico: 1,
+    });
     const pdfs: { path: string; pdf: Uint8Array }[] = [];
     let index = 0;
     for (const reporte of reportes) {
