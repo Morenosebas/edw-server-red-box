@@ -69,7 +69,7 @@ router.post("/login", async (req: Request, res: Response) => {
       { id: user._id, name: user.name, username: user.username },
       "mysecret"
     );
-    res.status(200).json({ token });
+    res.status(200).json({ token, username: user.username });
   } catch (error) {
     if (error instanceof Error) {
       res.status(400).json({ error: error.message });

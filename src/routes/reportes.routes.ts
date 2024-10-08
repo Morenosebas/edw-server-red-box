@@ -493,6 +493,13 @@ import JSZip from "jszip";
 router.get("/reportes/pdf", async (req: Request, res: Response) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
+    const { minDate, maxDate } = req.query;
+    const minDateMoment = (minDate as string)
+      ? moment(minDate as string)
+      : null;
+    const maxDateMoment = (maxDate as string)
+      ? moment(maxDate as string)
+      : null;
     if (!token) {
       res.status(401).json({ error: "No autorizado" });
       return;
