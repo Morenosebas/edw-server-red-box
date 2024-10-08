@@ -31,7 +31,7 @@ router.post(
     // Tipo de retorno void
     try {
       // Extrae los datos del cuerpo de la solicitud
-      const { KioskId, nota, name_tecnico, field } = req.body;
+      const { KioskId, nota, name_tecnico, field, fecha } = req.body;
       const sitio = await SITIOSMODEL.findOne({ KioskId });
       if (!sitio) {
         res.status(500).json({ error: "Sitio no encontrado" });
@@ -93,11 +93,11 @@ router.post(
           );
         }
       }
-      const fecha = moment().toDate();
+      const formatedDate = moment(fecha).format("YYYY-MM-DD");
       // Crea una nueva instancia del modelo con las rutas de las imágenes
       const newReporte = new REPORTE_TRABAJO_MODEL({
         KioskId,
-        fecha,
+        fecha: formatedDate,
         nota,
         name_tecnico,
         PictBOX: processedFiles["PictBOX"] || null,
@@ -141,7 +141,7 @@ router.patch(
       }
 
       // Extraer los campos que se pueden actualizar del cuerpo de la solicitud
-      const { nota, name_tecnico, field } = req.body;
+      const { nota, name_tecnico, field, fecha } = req.body;
 
       // Crear un objeto para almacenar las actualizaciones
       const actualizaciones: Partial<{
@@ -152,13 +152,14 @@ router.patch(
         PictDef: string;
         PictAft: string;
         field: string;
+        fecha: string;
       }> = {};
 
       // Actualizar los campos permitidos si están presentes
       if (nota !== undefined) actualizaciones.nota = nota;
       if (name_tecnico !== undefined)
         actualizaciones.name_tecnico = name_tecnico;
-
+      if (fecha !== undefined) actualizaciones.fecha = fecha;
       if (field !== undefined) actualizaciones.field = field;
       // Verificar si se han subido archivos
       if (req.files) {

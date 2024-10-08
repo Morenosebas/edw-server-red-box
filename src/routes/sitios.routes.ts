@@ -4,6 +4,7 @@ import SITIOSMODEL from "@/models/sitios";
 import type { Sitios, SitiosModel } from "@/models/sitios";
 import * as xlsx from "xlsx";
 import fs from "fs/promises";
+import REPORTE_TRABAJO_MODEL from "@/models/reporte_trabajo";
 const router = Router();
 
 //insertar sitios desde un xlsx a la base de datos
@@ -91,7 +92,18 @@ router.get("/sitios/:KioskId", async (req: Request, res: Response) => {
 router.get("/kiosks", async (req: Request, res: Response) => {
   try {
     const kiosks = await SITIOSMODEL.find({}, { KioskId: 1 });
-    res.status(200).json({ kiosks: kiosks.map((kiosk) => kiosk.KioskId) });
+    const existReports = await REPORTE_TRABAJO_MODEL.find({}, { KioskId: 1 });
+
+    res.status(200).json({
+      kiosks: kiosks
+        .map((kiosk) => kiosk.KioskId)
+        .filter(
+          (kiosk) =>
+            !existReports.some(
+              (report) => report.KioskId.toString() === kiosk.toString()
+            )
+        ),
+    });
   } catch (error) {
     if (error instanceof Error) {
       res.status(400).json({ error: error.message });
