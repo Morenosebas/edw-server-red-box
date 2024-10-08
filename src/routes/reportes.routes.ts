@@ -8,12 +8,11 @@ import sharp from "sharp";
 import upload from "@/controllers/uploadImages"; // Asegúrate de que esta ruta sea correcta
 import path from "path";
 import fs from "fs";
-import moment from "moment";
 import mongoose from "mongoose";
 import SITIOSMODEL from "@/models/sitios";
 import puppeteer, { Browser } from "puppeteer";
 import jwt from "jsonwebtoken";
-
+import moment from "@controllers/moment";
 const router = Router();
 
 // Configuración de campos para Multer

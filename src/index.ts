@@ -1,14 +1,13 @@
-import 'module-alias/register'; 
+import "module-alias/register";
 import express from "express";
 import dotenv from "dotenv";
 import morgan from "morgan";
 import db from "@mongo/mongo";
 import cors from "cors";
-import momentz from "moment-timezone";
+import "@controllers/moment";
 db();
 dotenv.config();
 
-momentz.tz.setDefault("America/New_York");
 db();
 
 const app = express();
