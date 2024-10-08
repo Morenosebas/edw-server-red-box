@@ -77,6 +77,21 @@ router.post("/login", async (req: Request, res: Response) => {
   }
 });
 
+router.post("/register", async (req: Request, res: Response) => {
+  try {
+    const user = await USERMODEL.create({
+      name: req.body.name,
+      username: req.body.username,
+      password: await hashPassword(req.body.password),
+    });
+    res.status(201).json({ user });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+});
+
 router.get("/tecnicos", async (req: Request, res: Response) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];

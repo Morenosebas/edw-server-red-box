@@ -32,7 +32,11 @@ router.post(
     try {
       // Extrae los datos del cuerpo de la solicitud
       const { KioskId, nota, name_tecnico, field } = req.body;
-
+      const sitio = await SITIOSMODEL.findOne({ KioskId });
+      if (!sitio) {
+        res.status(500).json({ error: "Sitio no encontrado" });
+        return;
+      }
       // Verifica que los archivos estén presentes
       if (!req.files) {
         res.status(400).json({ error: "No se subieron los archivos" });
