@@ -118,4 +118,70 @@ router.get("/tecnicos", async (req: Request, res: Response) => {
   }
 });
 
+router.get("/tecnicos/username", async (req: Request, res: Response) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      res.status(401).json({ error: "No autorizado" });
+      return;
+    }
+    const decode = jwt.decode(token) as {
+      username: string;
+      name: string;
+    };
+    if (!decode) {
+      res.status(401).json({ error: "No autorizado" });
+      return;
+    }
+    const query =
+      decode.username === "EdwinR" ? {} : { username: decode.username };
+    const users = await USERMODEL.find(query, { name: 1, username: 1 });
+    res.status(200).json({
+      users: users.map((user) => {
+        return {
+          name: user.name,
+          username: user.username,
+        };
+      }),
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+});
+
+router.delete("/tecnicos/:username", async (req: Request, res: Response) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      res.status(401).json({ error: "No autorizado" });
+      return;
+    }
+    const decode = jwt.decode(token) as {
+      username: string;
+      name: string;
+    };
+    if (!decode) {
+      res.status(401).json({ error: "No autorizado" });
+      return;
+    }
+    if (decode.username !== "EdwinR") {
+      res.status(401).json({ error: "No autorizado" });
+      return;
+    }
+    const user = await USERMODEL.findOneAndDelete({
+      username: req.params.username,
+    });
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+});
 export default router;
