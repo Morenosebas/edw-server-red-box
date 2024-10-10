@@ -359,6 +359,43 @@ router.get("/reportes", async (req: Request, res: Response) => {
   }
 });
 
+router.get("/reportes/public", async (req: Request, res: Response) => {
+  try {
+    const reportes = await REPORTE_TRABAJO_MODEL.find(
+      {},
+      {
+        KioskId: 1,
+        fecha: 1,
+        nota: 1,
+        name_tecnico: 1,
+        code: 1,
+      }
+    );
+    const sitios = await SITIOSMODEL.find(
+      { KioskId: { $in: reportes.map((reporte) => reporte.KioskId) } },
+      { KioskId: 1, store_id: 1, address: 1 }
+    );
+    const reportesConSitio = reportes.map((reporte) => {
+      const sitio = sitios.find((s) => s.KioskId === reporte.KioskId);
+
+      return {
+        KioskId: reporte.KioskId,
+        fecha: moment(reporte.fecha).format("YYYY-MM-DD"),
+        nota: reporte.nota,
+        name_tecnico: reporte.name_tecnico,
+        code: reporte.code,
+        store_id: sitio?.store_id,
+        address: sitio?.address,
+        _id: reporte._id,
+      };
+    });
+    res.status(200).json(reportesConSitio);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
 router.delete("/reporte/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
