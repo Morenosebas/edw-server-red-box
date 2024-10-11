@@ -146,7 +146,17 @@ router.patch(
       }
 
       // Extraer los campos que se pueden actualizar del cuerpo de la solicitud
-      const { nota, name_tecnico, field: fieldChange = "", fecha } = req.body;
+      const {
+        nota,
+        name_tecnico,
+        field: fieldChange = "",
+        fecha,
+      }: {
+        nota: string;
+        name_tecnico: string;
+        field: string;
+        fecha: string;
+      } = req.body;
 
       // Crear un objeto para almacenar las actualizaciones
       const actualizaciones: Partial<{
