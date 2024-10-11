@@ -333,7 +333,7 @@ router.get("/reportes", async (req: Request, res: Response) => {
       nota: 1,
       name_tecnico: 1,
       code: 1,
-    }).sort({ fecha: -1 });
+    }).sort({ _id: -1 });
     const sitios = await SITIOSMODEL.find(
       { KioskId: { $in: reportes.map((reporte) => reporte.KioskId) } },
       { KioskId: 1, store_id: 1, address: 1 }
@@ -370,7 +370,7 @@ router.get("/reportes/public", async (req: Request, res: Response) => {
         name_tecnico: 1,
         code: 1,
       }
-    ).sort({ fecha: -1 });
+    ).sort({ _id: -1 });
     const sitios = await SITIOSMODEL.find(
       { KioskId: { $in: reportes.map((reporte) => reporte.KioskId) } },
       { KioskId: 1, store_id: 1, address: 1 }
@@ -441,7 +441,7 @@ router.get("/reportes/personal", async (req: Request, res: Response) => {
       KioskId: 1,
       fecha: 1,
       name_tecnico: 1,
-    }).sort({ fecha: -1 });
+    }).sort({ _id: -1 });
     const sitios = await SITIOSMODEL.find(
       { KioskId: { $in: reportes.map((reporte) => reporte.KioskId) } },
       { KioskId: 1, address: 1, city: 1, state: 1, zip_code: 1 }
