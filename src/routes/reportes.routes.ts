@@ -160,7 +160,7 @@ router.patch(
         actualizaciones.name_tecnico = name_tecnico;
       if (fecha !== undefined) {
         const formatedDate = moment(fecha).format("YYYY-MM-DD");
-        actualizaciones.fecha = fecha;
+        actualizaciones.fecha = formatedDate;
       }
       if (fieldChange !== undefined) actualizaciones.field = fieldChange;
       // Verificar si se han subido archivos
