@@ -140,7 +140,7 @@ router.patch(
       }
 
       // Extraer los campos que se pueden actualizar del cuerpo de la solicitud
-      const { nota, name_tecnico, field:fieldChange, fecha } = req.body;
+      const { nota, name_tecnico, field: fieldChange, fecha } = req.body;
 
       // Crear un objeto para almacenar las actualizaciones
       const actualizaciones: Partial<{
@@ -158,14 +158,16 @@ router.patch(
       if (nota !== undefined) actualizaciones.nota = nota;
       if (name_tecnico !== undefined)
         actualizaciones.name_tecnico = name_tecnico;
-
+      if (fecha !== undefined) {
+        const formatedDate = moment(fecha).format("YYYY-MM-DD");
+        actualizaciones.fecha = fecha;
+      }
       if (fieldChange !== undefined) actualizaciones.field = fieldChange;
       // Verificar si se han subido archivos
       if (req.files) {
         const files = req.files as {
           [fieldname: string]: Express.Multer.File[];
         };
-        console.log("field", fieldChange)
         for (const field in files) {
           const fileArray = files[field];
           if (fileArray && fileArray.length > 0) {
@@ -283,7 +285,7 @@ router.get("/reporte/:id", async (req: Request, res: Response) => {
         store_id: string;
         _id: string;
         field: string;
-        ParentName:string
+        ParentName: string;
       };
     } = {
       reporte: {
@@ -303,7 +305,7 @@ router.get("/reporte/:id", async (req: Request, res: Response) => {
         code: reporte.code,
         store_id: sitio.store_id,
         field: reporte?.field || "",
-        ParentName:sitio.ParentName as string
+        ParentName: sitio.ParentName as string,
       },
     };
     res.status(200).json(response);
@@ -577,9 +579,12 @@ router.get("/reportes/pdf", async (req: Request, res: Response) => {
         timeout: 60000 * 5,
       });
       const page = await browser.newPage();
-      await page.goto(`http://localhost:3003/redbox/reporteCarta/${reporte._id}`, {
-        waitUntil: "networkidle0",
-      });
+      await page.goto(
+        `http://localhost:3003/redbox/reporteCarta/${reporte._id}`,
+        {
+          waitUntil: "networkidle0",
+        }
+      );
       const pdfPath = path.join(__dirname, `report_${reporte._id}.pdf`);
       const pdf = await page.pdf({
         path: pdfPath, // Guardar el PDF en la ruta especificada
