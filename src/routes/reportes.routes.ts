@@ -30,7 +30,13 @@ router.post(
     // Tipo de retorno void
     try {
       // Extrae los datos del cuerpo de la solicitud
-      const { KioskId, nota, name_tecnico, field, fecha } = req.body;
+      const {
+        KioskId,
+        nota,
+        name_tecnico,
+        field: fieldChange,
+        fecha,
+      } = req.body;
       const sitio = await SITIOSMODEL.findOne({ KioskId });
       if (!sitio) {
         res.status(500).json({ error: "Sitio no encontrado" });
@@ -103,7 +109,7 @@ router.post(
         PictBef: processedFiles["PictBef"] || null,
         PictDef: processedFiles["PictDef"] || null,
         PictAft: processedFiles["PictAft"] || null,
-        field: field || "",
+        field: fieldChange || "",
       });
 
       // Guarda en la base de datos
