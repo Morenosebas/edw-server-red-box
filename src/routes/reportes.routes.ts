@@ -165,6 +165,7 @@ router.patch(
       if (name_tecnico !== undefined)
         actualizaciones.name_tecnico = name_tecnico;
       if (fecha !== undefined) {
+        console.log(fecha);
         const formatedDate = moment(fecha).format("YYYY-MM-DD");
         actualizaciones.fecha = formatedDate;
       }
