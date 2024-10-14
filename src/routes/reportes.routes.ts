@@ -119,8 +119,15 @@ router.post(
       res.status(201).json(savedReporte);
     } catch (error) {
       console.error(error);
-      // Manejo de errores
-      res.status(500).json({ error: "Error interno del servidor" });
+      if (error instanceof Error) {
+        if (error.message.includes("E11000")) {
+          res
+            .status(500)
+            .json({ error: "The KIOSKID already has a report.  " });
+        } else {
+          res.status(500).json({ error: "Server error" });
+        }
+      }
     }
   }
 );
