@@ -543,8 +543,10 @@ router.get("/reportes/pdf/:id", async (req: Request, res: Response) => {
       }
     });
   } catch (error) {
-    console.error("Error generando el PDF:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
+    if (error instanceof Error) {
+      console.error("Error generando el PDF:", error);
+      res.status(500).json({ error: error.message });
+    }
   } finally {
     if (browser) {
       await browser.close();
@@ -596,29 +598,33 @@ router.get("/reportes/pdf", async (req: Request, res: Response) => {
     const pdfs: { path: string; pdf: Uint8Array }[] = [];
     let index = 0;
     for (const reporte of reportes) {
-      const browser = await puppeteer.launch({
-        headless: true,
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
-        timeout: 60000 * 5,
-      });
-      const page = await browser.newPage();
-      await page.goto(
-        `http://localhost:3003/redbox/reporteCarta/${reporte._id}`,
-        {
-          waitUntil: "networkidle0",
-        }
-      );
-      const pdfPath = path.join(__dirname, `report_${reporte._id}.pdf`);
-      const pdf = await page.pdf({
-        path: pdfPath, // Guardar el PDF en la ruta especificada
-        format: "LETTER",
-        printBackground: true,
-        waitForFonts: true,
-        pageRanges: "1",
-      });
+      try {
+        const browser = await puppeteer.launch({
+          headless: true,
+          args: ["--no-sandbox", "--disable-setuid-sandbox"],
+          timeout: 60000 * 5,
+        });
+        const page = await browser.newPage();
+        await page.goto(
+          `http://localhost:3003/redbox/reporteCarta/${reporte._id}`,
+          {
+            waitUntil: "networkidle0",
+          }
+        );
+        const pdfPath = path.join(__dirname, `report_${reporte._id}.pdf`);
+        const pdf = await page.pdf({
+          path: pdfPath, // Guardar el PDF en la ruta especificada
+          format: "LETTER",
+          printBackground: true,
+          waitForFonts: true,
+          pageRanges: "1",
+        });
 
-      pdfs.push({ path: `report_${reporte.KioskId}_${index}.pdf`, pdf });
-      index++;
+        pdfs.push({ path: `report_${reporte.KioskId}_${index}.pdf`, pdf });
+        index++;
+      } catch (error) {
+        console.error("Error generando el PDF:", error);
+      }
     }
     //crear un archivo zip
     const zipPath = path.join(
@@ -626,7 +632,6 @@ router.get("/reportes/pdf", async (req: Request, res: Response) => {
       "uploads",
       `reportes.zip`
     );
-    console.log(zipPath);
     const zip = new JSZip();
     //con los pdfs
     pdfs.forEach((pdf) => {
@@ -639,7 +644,7 @@ router.get("/reportes/pdf", async (req: Request, res: Response) => {
     res.download(zipPath, "reportes.zip", async (err) => {
       if (err) {
         console.error("Error al descargar el archivo:", err);
-        res.status(500).json({ error: "Error al descargar el archivo" });
+        res.status(500).json({ error: err.message });
       }
       // Eliminar el archivo temporal después de la descarga
       try {
@@ -648,20 +653,11 @@ router.get("/reportes/pdf", async (req: Request, res: Response) => {
         console.error("Error al eliminar el archivo:", e);
       }
     });
-
-    // try {
-    //   await unlinkAsync(zipPath);
-    //   for (const pdf of pdfs) {
-    //     await unlinkAsync(pdf.path).catch((error) => {
-    //       console.error("Error al eliminar el archivo:", error);
-    //     });
-    //   }
-    // } catch (error) {
-    //   console.error("Error al eliminar el archivo:", error);
-    // }
   } catch (error) {
     console.error("Error generando el PDF:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    }
   }
 });
 export default router;
