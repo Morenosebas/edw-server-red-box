@@ -579,14 +579,14 @@ router.get("/reportes/pdf", async (req: Request, res: Response) => {
         ? {
             fecha: {
               $gte: minDateMoment?.toDate(),
-              $lte: maxDateMoment?.toDate(),
+              $lte: maxDateMoment?.endOf("day").toDate(),
             },
           }
         : {
             name_tecnico: decode.name,
             fecha: {
               $gte: minDateMoment?.toDate(),
-              $lte: maxDateMoment?.toDate(),
+              $lte: maxDateMoment?.endOf("day").toDate(),
             },
           };
 
@@ -655,6 +655,160 @@ router.get("/reportes/pdf", async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Error generando el PDF:", error);
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+});
+
+import ExcelJS from "exceljs";
+
+router.get("/reportes/excel", async (req, res) => {
+  try {
+    const { minDate, maxDate } = req.query;
+    const minDateMoment = minDate ? moment(minDate.toString()) : moment(0);
+    const maxDateMoment = maxDate
+      ? moment(maxDate.toString()).endOf("day")
+      : moment().endOf("day");
+
+    const query = {
+      fecha: {
+        $gte: minDateMoment.toDate(),
+        $lte: maxDateMoment.toDate(),
+      },
+    };
+
+    const reportes = await REPORTE_TRABAJO_MODEL.find(query, {
+      KioskId: 1,
+      fecha: 1,
+      name_tecnico: 1,
+      nota: 1,
+      code: 1,
+      field: 1,
+    });
+    const sitios = await SITIOSMODEL.find(
+      {},
+      { KioskId: 1, store_id: 1, address: 1, city: 1, state: 1, zip_code: 1 }
+    );
+
+    const reportesConSitio = reportes.map((reporte) => {
+      const sitio = sitios.find((s) => s.KioskId === reporte.KioskId);
+      return {
+        code: reporte.code.toString(),
+        KioskId: reporte.KioskId,
+        Date: moment(reporte.fecha).format("YYYY-MM-DD"),
+        Technician: reporte.name_tecnico,
+        Store: sitio?.store_id,
+        Address: sitio?.address,
+        City: sitio?.city,
+        State: sitio?.state,
+        Zip: sitio?.zip_code,
+        Note: reporte.nota,
+        Completed: "True",
+        Field: reporte.field || "none",
+      };
+    });
+    const sitiosSinReporte = sitios
+      .filter(
+        (sitio) =>
+          !reportesConSitio.some((reporte) => reporte.KioskId === sitio.KioskId)
+      )
+      .map((sitio) => ({
+        code: "",
+        KioskId: sitio.KioskId,
+        Date: "",
+        Technician: "",
+        Store: sitio.store_id,
+        Address: sitio.address,
+        City: sitio.city,
+        State: sitio.state,
+        Zip: sitio.zip_code,
+        Note: "",
+        Completed: "False",
+        Field: "none",
+      }));
+
+    reportesConSitio.push(...sitiosSinReporte);
+
+    // Crear una nueva instancia de Workbook
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Reportes");
+
+    // Definir las columnas
+    worksheet.columns = [
+      { header: "Code", key: "code", width: 15 },
+      { header: "KioskId", key: "KioskId", width: 15 },
+      { header: "Date", key: "Date", width: 15 },
+      { header: "Technician", key: "Technician", width: 20 },
+      { header: "Store", key: "Store", width: 15 },
+      { header: "Address", key: "Address", width: 30 },
+      { header: "City", key: "City", width: 20 },
+      { header: "State", key: "State", width: 15 },
+      { header: "Zip", key: "Zip", width: 15 },
+      { header: "Note", key: "Note", width: 30 },
+      { header: "Completed", key: "Completed", width: 15 },
+      { header: "Field", key: "Field", width: 15 },
+    ];
+
+    // Agregar filas de datos
+    reportesConSitio.forEach((reporte) => {
+      worksheet.addRow(reporte);
+    });
+
+    // Aplicar estilos a la primera fila (encabezados)
+    worksheet.getRow(1).eachCell((cell, collnumber) => {
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF0000FF" }, // Fondo azul
+      };
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+      };
+      cell.alignment = { vertical: "middle", horizontal: "center" };
+    });
+
+    // Opcional: Aplicar estilos a todas las celdas
+    worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+      if (rowNumber !== 1) {
+        // Saltar encabezados
+        row.eachCell((cell) => {
+          cell.border = {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            bottom: { style: "thin" },
+            right: { style: "thin" },
+          };
+          cell.alignment = { vertical: "middle", horizontal: "left" };
+          if (cell.value === "True") {
+            cell.fill = {
+              type: "pattern",
+              pattern: "solid",
+              fgColor: { argb: "FF00FF00" }, // Fondo verde
+            };
+          }
+        });
+      }
+    });
+
+    // Generar el buffer del archivo Excel
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    // Configurar las cabeceras de la respuesta
+    res.setHeader("Content-Disposition", "attachment; filename=reportes.xlsx");
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+
+    // Enviar el archivo Excel como respuesta
+    res.send(buffer);
+  } catch (error) {
+    console.error("Error generando el Excel:", error);
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });
     }
