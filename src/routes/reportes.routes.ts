@@ -756,7 +756,7 @@ router.get("/reportes/excel", async (req, res) => {
     });
 
     // Aplicar estilos a la primera fila (encabezados)
-    worksheet.getRow(1).eachCell((cell, collnumber) => {
+    worksheet.getRow(1).eachCell((cell) => {
       cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
       cell.fill = {
         type: "pattern",
@@ -773,7 +773,7 @@ router.get("/reportes/excel", async (req, res) => {
     });
 
     // Opcional: Aplicar estilos a todas las celdas
-    worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+    worksheet.eachRow({ includeEmpty: false }, (row, rowNumber: number) => {
       if (rowNumber !== 1) {
         // Saltar encabezados
         row.eachCell((cell) => {
