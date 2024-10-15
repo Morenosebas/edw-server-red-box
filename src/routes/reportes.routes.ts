@@ -602,13 +602,13 @@ router.get("/reportes/pdf", async (req: Request, res: Response) => {
         const browser = await puppeteer.launch({
           headless: true,
           args: ["--no-sandbox", "--disable-setuid-sandbox"],
-          timeout: 60000 * 5,
         });
         const page = await browser.newPage();
         await page.goto(
           `http://localhost:3003/redbox/reporteCarta/${reporte._id}`,
           {
             waitUntil: "networkidle0",
+            timeout: 10000,
           }
         );
         const pdfPath = path.join(__dirname, `report_${reporte._id}.pdf`);
@@ -778,7 +778,7 @@ router.get("/reportes/excel", async (req, res) => {
       (row: ExcelJS.Row, rowNumber: number) => {
         if (rowNumber !== 1) {
           // Saltar encabezados
-          row.eachCell((cell) => {
+          row.eachCell((cell: ExcelJS.Cell) => {
             cell.border = {
               top: { style: "thin" },
               left: { style: "thin" },
