@@ -25,7 +25,6 @@ router.get("/imagen/:src", async (req: Request, res: Response) => {
 
     // Decodifica el 'path' desde Base64 usando Buffer
     let decodedPath: string;
-    console.log("encodedPath", encodedPath);
     try {
       decodedPath = Buffer.from(encodedPath, "base64").toString("utf-8");
     } catch (decodeError) {
