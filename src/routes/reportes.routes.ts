@@ -756,7 +756,7 @@ router.get("/reportes/excel", async (req, res) => {
     });
 
     // Aplicar estilos a la primera fila (encabezados)
-    worksheet.getRow(1).eachCell((cell) => {
+    worksheet.getRow(1).eachCell((cell: ExcelJS.Cell) => {
       cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
       cell.fill = {
         type: "pattern",
@@ -773,27 +773,30 @@ router.get("/reportes/excel", async (req, res) => {
     });
 
     // Opcional: Aplicar estilos a todas las celdas
-    worksheet.eachRow({ includeEmpty: false }, (row, rowNumber: number) => {
-      if (rowNumber !== 1) {
-        // Saltar encabezados
-        row.eachCell((cell) => {
-          cell.border = {
-            top: { style: "thin" },
-            left: { style: "thin" },
-            bottom: { style: "thin" },
-            right: { style: "thin" },
-          };
-          cell.alignment = { vertical: "middle", horizontal: "left" };
-          if (cell.value === "True") {
-            cell.fill = {
-              type: "pattern",
-              pattern: "solid",
-              fgColor: { argb: "FF00FF00" }, // Fondo verde
+    worksheet.eachRow(
+      { includeEmpty: false },
+      (row: ExcelJS.Row, rowNumber: number) => {
+        if (rowNumber !== 1) {
+          // Saltar encabezados
+          row.eachCell((cell) => {
+            cell.border = {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
             };
-          }
-        });
+            cell.alignment = { vertical: "middle", horizontal: "left" };
+            if (cell.value === "True") {
+              cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "FF00FF00" }, // Fondo verde
+              };
+            }
+          });
+        }
       }
-    });
+    );
 
     // Generar el buffer del archivo Excel
     const buffer = await workbook.xlsx.writeBuffer();
