@@ -506,7 +506,6 @@ router.get("/reportes/pdf/:id", async (req: Request, res: Response) => {
     browser = await puppeteer.launch({
       headless: true, // Cambia a 'false' si quieres ver la operación de Puppeteer
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
-      timeout: 60000 * 5,
     });
 
     const page = await browser.newPage();
@@ -603,25 +602,32 @@ router.get("/reportes/pdf", async (req: Request, res: Response) => {
           headless: true,
           args: ["--no-sandbox", "--disable-setuid-sandbox"],
         });
-        const page = await browser.newPage();
-        await page.goto(
-          `http://localhost:3003/redbox/reporteCarta/${reporte._id}`,
-          {
-            waitUntil: "networkidle0",
-            timeout: 10000,
-          }
-        );
-        const pdfPath = path.join(__dirname, `report_${reporte._id}.pdf`);
-        const pdf = await page.pdf({
-          path: pdfPath, // Guardar el PDF en la ruta especificada
-          format: "LETTER",
-          printBackground: true,
-          waitForFonts: true,
-          pageRanges: "1",
-        });
+        try {
+          const page = await browser.newPage();
+          await page.goto(
+            `http://localhost:3003/redbox/reporteCarta/${reporte._id}`,
+            {
+              waitUntil: "networkidle0",
+              timeout: 10000,
+            }
+          );
+          const pdfPath = path.join(__dirname, `report_${reporte._id}.pdf`);
+          const pdf = await page.pdf({
+            path: pdfPath, // Guardar el PDF en la ruta especificada
+            format: "LETTER",
+            printBackground: true,
+            waitForFonts: true,
+            pageRanges: "1",
+          });
 
-        pdfs.push({ path: `report_${reporte.KioskId}_${index}.pdf`, pdf });
-        index++;
+          pdfs.push({ path: `report_${reporte.KioskId}_${index}.pdf`, pdf });
+          await browser.close();
+
+          index++;
+        } catch (error) {
+          await browser.close();
+          console.error("Error generando el PDF:", error);
+        }
       } catch (error) {
         console.error("Error generando el PDF:", error);
       }
