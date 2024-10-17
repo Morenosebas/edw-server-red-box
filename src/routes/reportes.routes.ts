@@ -623,6 +623,9 @@ router.get("/reportes/pdf", async (req: Request, res: Response) => {
           pdfs.push({ path: `report_${reporte.KioskId}_${index}.pdf`, pdf });
           await browser.close();
 
+          console.log(
+            `PDF generado para el reporte ${reporte._id} index ${index}`
+          );
           index++;
         } catch (error) {
           await browser.close();
