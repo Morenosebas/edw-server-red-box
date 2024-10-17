@@ -555,53 +555,66 @@ router.get("/reportes/pdf/:id", async (req: Request, res: Response) => {
 
 import JSZip from "jszip";
 
-router.get("/reportes/pdf", async (req: Request, res: Response) => {
-  try {
-    const token = req.headers.authorization?.split(" ")[1];
-    const { minDate, maxDate } = req.query;
-    const minDateMoment = (minDate as string)
-      ? moment(minDate as string)
-      : null;
-    const maxDateMoment = (maxDate as string)
-      ? moment(maxDate as string)
-      : null;
-    if (!token) {
-      res.status(401).json({ error: "No autorizado" });
-      return;
-    }
-    const decode = jwt.decode(token) as {
-      username: string;
-      name: string;
-    };
-    const query =
-      decode.username === "EdwinR"
-        ? {
-            fecha: {
-              $gte: minDateMoment?.toDate(),
-              $lte: maxDateMoment?.endOf("day").toDate(),
-            },
-          }
-        : {
-            name_tecnico: decode.name,
-            fecha: {
-              $gte: minDateMoment?.toDate(),
-              $lte: maxDateMoment?.endOf("day").toDate(),
-            },
-          };
+router.get(
+  "/reportes/pdf",
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      // **1. Autenticación y Extracción de Parámetros**
+      const token = req.headers.authorization?.split(" ")[1];
+      const { minDate, maxDate } = req.query;
+      const minDateMoment = minDate ? moment(minDate as string) : null;
+      const maxDateMoment = maxDate ? moment(maxDate as string) : null;
 
-    const reportes = await REPORTE_TRABAJO_MODEL.find(query, {
-      KioskId: 1,
-      fecha: 1,
-      name_tecnico: 1,
-    });
-    const pdfs: { path: string; pdf: Uint8Array }[] = [];
-    let index = 0;
-    for (const reporte of reportes) {
-      try {
-        const browser = await puppeteer.launch({
-          headless: true,
-          args: ["--no-sandbox", "--disable-setuid-sandbox"],
-        });
+      if (!token) {
+        res.status(401).json({ error: "No autorizado" });
+        return;
+      }
+
+      const decode = jwt.decode(token) as {
+        username: string;
+        name: string;
+      };
+
+      // **2. Construcción de la Consulta**
+      const query =
+        decode.username === "EdwinR"
+          ? {
+              fecha: {
+                $gte: minDateMoment?.toDate(),
+                $lte: maxDateMoment?.endOf("day").toDate(),
+              },
+            }
+          : {
+              name_tecnico: decode.name,
+              fecha: {
+                $gte: minDateMoment?.toDate(),
+                $lte: maxDateMoment?.endOf("day").toDate(),
+              },
+            };
+
+      // **3. Recuperación de Reportes**
+      const reportes = await REPORTE_TRABAJO_MODEL.find(query, {
+        KioskId: 1,
+        fecha: 1,
+        name_tecnico: 1,
+      });
+
+      if (reportes.length === 0) {
+        res.status(404).json({ error: "No se encontraron reportes" });
+        return;
+      }
+
+      // **4. Inicialización de Puppeteer**
+      const browser = await puppeteer.launch({
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      });
+
+      const pdfs: { path: string; pdf: Buffer }[] = [];
+      let index = 0;
+
+      // **5. Generación de PDFs con `for...of`**
+      for (const reporte of reportes) {
         try {
           const page = await browser.newPage();
           await page.goto(
@@ -611,64 +624,76 @@ router.get("/reportes/pdf", async (req: Request, res: Response) => {
               timeout: 10000,
             }
           );
-          const pdfPath = path.join(__dirname, `report_${reporte._id}.pdf`);
-          const pdf = await page.pdf({
-            path: pdfPath, // Guardar el PDF en la ruta especificada
+
+          const pdfBuffer = await page.pdf({
             format: "LETTER",
             printBackground: true,
             waitForFonts: true,
             pageRanges: "1",
+            // Puedes ajustar otras opciones según tus necesidades
           });
 
-          pdfs.push({ path: `report_${reporte.KioskId}_${index}.pdf`, pdf });
-          await browser.close();
+          pdfs.push({
+            path: `report_${reporte.KioskId}_${index}.pdf`,
+            pdf: pdfBuffer as Buffer,
+          });
 
           console.log(
             `PDF generado para el reporte ${reporte._id} index ${index}`
           );
           index++;
+
+          await page.close();
         } catch (error) {
-          await browser.close();
-          console.error("Error generando el PDF:", error);
+          console.error(
+            `Error generando el PDF para reporte ${reporte._id}:`,
+            error
+          );
         }
-      } catch (error) {
-        console.error("Error generando el PDF:", error);
       }
-    }
-    //crear un archivo zip
-    const zipPath = path.join(
-      __dirname.split("src")[0],
-      "uploads",
-      `reportes.zip`
-    );
-    const zip = new JSZip();
-    //con los pdfs
-    pdfs.forEach((pdf) => {
-      zip.file(pdf.path, pdf.pdf);
-    });
-    const content = await zip.generateAsync({ type: "nodebuffer" });
-    await fs.promises.writeFile(zipPath, content).catch((error) => {
-      console.error("Error al escribir el archivo ZIP:", error);
-    });
-    res.download(zipPath, "reportes.zip", async (err) => {
-      if (err) {
-        console.error("Error al descargar el archivo:", err);
-        res.status(500).json({ error: err.message });
+
+      // **6. Cierre del Navegador**
+      await browser.close();
+
+      if (pdfs.length === 0) {
+        res.status(500).json({ error: "No se pudieron generar los PDFs" });
+        return;
       }
-      // Eliminar el archivo temporal después de la descarga
-      try {
-        await unlinkAsync(zipPath);
-      } catch (e) {
-        console.error("Error al eliminar el archivo:", e);
+
+      // **7. Creación del Archivo ZIP en Memoria**
+      const zip = new JSZip();
+      pdfs.forEach((pdf) => {
+        zip.file(pdf.path, pdf.pdf);
+      });
+
+      const zipContent = await zip.generateAsync({
+        type: "nodebuffer",
+        compression: "DEFLATE",
+        compressionOptions: { level: 9 },
+      });
+
+      // **8. Configuración de las Cabeceras de Respuesta**
+      res.set({
+        "Content-Type": "application/zip",
+        "Content-Disposition": `attachment; filename=reportes.zip`,
+        "Content-Length": zipContent.length,
+      });
+
+      // **9. Envío del ZIP al Cliente**
+      res.send(zipContent);
+      return;
+    } catch (error) {
+      console.error("Error generando el PDF:", error);
+      if (error instanceof Error) {
+        res.status(500).json({ error: error.message });
+        return;
+      } else {
+        res.status(500).json({ error: "Error desconocido" });
+        return;
       }
-    });
-  } catch (error) {
-    console.error("Error generando el PDF:", error);
-    if (error instanceof Error) {
-      res.status(500).json({ error: error.message });
     }
   }
-});
+);
 
 import ExcelJS from "exceljs";
 
