@@ -83,6 +83,7 @@ router.post(
 
           // Procesa la imagen con Sharp
           await sharp(buffer)
+            .withMetadata()
             .resize(800, 800, {
               fit: sharp.fit.fill,
               withoutEnlargement: true,
@@ -220,6 +221,7 @@ router.patch(
 
             // Procesar la imagen con Sharp
             await sharp(buffer)
+              .withMetadata()
               .resize(800, 800, {
                 fit: sharp.fit.fill,
               })
