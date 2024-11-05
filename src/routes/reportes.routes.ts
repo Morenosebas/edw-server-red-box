@@ -577,7 +577,8 @@ router.get(
         username: string;
         name: string;
       };
-
+      res.setHeader("Content-Type", "application/zip");
+      res.setHeader("Content-Disposition", "attachment; filename=reportes.zip");
       // **2. Construcción de la Consulta**
       const query =
         decode.username === "EdwinR"
@@ -618,8 +619,6 @@ router.get(
       const page = await browser.newPage();
 
       // **5. Generación de PDFs con `for...of`**
-      res.setHeader("Content-Type", "application/zip");
-      res.setHeader("Content-Disposition", "attachment; filename=reportes.zip");
 
       const archive = archiver("zip", { zlib: { level: 9 } });
       archive.on("error", (err) => {
@@ -730,10 +729,8 @@ router.get(
       console.error("Error generando el PDF:", error);
       if (error instanceof Error) {
         res.status(500).json({ error: error.message });
-        return;
       } else {
         res.status(500).json({ error: "Error desconocido" });
-        return;
       }
     }
   }
