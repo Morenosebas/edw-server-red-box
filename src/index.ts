@@ -38,7 +38,7 @@ app.use(
       " - " +
       chalk.cyan(":response-time ms"),
     {
-      skip: (req, res) => req.url.includes("/redbox/api/imagen/"),
+      skip: (req, res) => req.url.startsWith("/redbox/api/imagen/"),
     }
   )
 );
