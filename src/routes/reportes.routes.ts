@@ -670,12 +670,12 @@ router.get(
           );
         }
       }
-      await page.close();
+      archive.finalize();
 
+      await page.close();
       // **6. Cierre del Navegador**
       await browser.close();
 
-      archive.finalize();
       if (pdfs.length === 0) {
         res.status(500).json({ error: "No se pudieron generar los PDFs" });
         return;
@@ -701,7 +701,6 @@ router.get(
 
       // **9. Envío del ZIP al Cliente**
       // res.send(zipContent);
-      return;
     } catch (error) {
       console.error("Error generando el PDF:", error);
       if (error instanceof Error) {
