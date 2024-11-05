@@ -555,7 +555,8 @@ router.get("/reportes/pdf/:id", async (req: Request, res: Response) => {
   }
 });
 
-import JSZip from "jszip";
+// import JSZip from "jszip";
+import archiver from "archiver";
 
 router.get(
   "/reportes/pdf",
@@ -614,11 +615,25 @@ router.get(
 
       const pdfs: { path: string; pdf: Buffer }[] = [];
       let index = 0;
+      const page = await browser.newPage();
 
       // **5. Generación de PDFs con `for...of`**
+      res.setHeader("Content-Type", "application/zip");
+      res.setHeader("Content-Disposition", "attachment; filename=reportes.zip");
+
+      const archive = archiver("zip", { zlib: { level: 9 } });
+      archive.on("error", (err) => {
+        console.error("Error en el archivo ZIP:", err);
+        if (!res.headersSent) {
+          res.status(500).end("Error in the archive.");
+        } else {
+          res.end();
+        }
+      });
+      archive.pipe(res);
+
       for (const reporte of reportes) {
         try {
-          const page = await browser.newPage();
           await page.goto(
             `http://localhost:3003/redbox/reporteCarta/${reporte._id}`,
             {
@@ -635,17 +650,19 @@ router.get(
             // Puedes ajustar otras opciones según tus necesidades
           });
 
-          pdfs.push({
-            path: `report_${reporte.KioskId}_${index}.pdf`,
-            pdf: pdfBuffer as Buffer,
+          // pdfs.push({
+          //   path: `report_${reporte.KioskId}_${index}.pdf`,
+          //   pdf: pdfBuffer as Buffer,
+          // });
+
+          archive.append(pdfBuffer as Buffer, {
+            name: `report_${reporte.KioskId}_${index}.pdf`,
           });
 
           console.log(
             `PDF generado para el reporte ${reporte._id} index ${index}`
           );
           index++;
-
-          await page.close();
         } catch (error) {
           console.error(
             `Error generando el PDF para reporte ${reporte._id}:`,
@@ -653,36 +670,37 @@ router.get(
           );
         }
       }
+      await page.close();
 
       // **6. Cierre del Navegador**
       await browser.close();
 
+      archive.finalize();
       if (pdfs.length === 0) {
         res.status(500).json({ error: "No se pudieron generar los PDFs" });
         return;
       }
-
       // **7. Creación del Archivo ZIP en Memoria**
-      const zip = new JSZip();
-      pdfs.forEach((pdf) => {
-        zip.file(pdf.path, pdf.pdf);
-      });
+      // const zip = new JSZip();
+      // pdfs.forEach((pdf) => {
+      //   zip.file(pdf.path, pdf.pdf);
+      // });
 
-      const zipContent = await zip.generateAsync({
-        type: "nodebuffer",
-        compression: "DEFLATE",
-        compressionOptions: { level: 9 },
-      });
+      // const zipContent = await zip.generateAsync({
+      //   type: "nodebuffer",
+      //   compression: "DEFLATE",
+      //   compressionOptions: { level: 9 },
+      // });
 
       // **8. Configuración de las Cabeceras de Respuesta**
-      res.set({
-        "Content-Type": "application/zip",
-        "Content-Disposition": `attachment; filename=reportes.zip`,
-        "Content-Length": zipContent.length,
-      });
+      // res.set({
+      //   "Content-Type": "application/zip",
+      //   "Content-Disposition": `attachment; filename=reportes.zip`,
+      //   "Content-Length": zipContent.length,
+      // });
 
       // **9. Envío del ZIP al Cliente**
-      res.send(zipContent);
+      // res.send(zipContent);
       return;
     } catch (error) {
       console.error("Error generando el PDF:", error);
