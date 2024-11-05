@@ -557,7 +557,7 @@ router.get("/reportes/pdf/:id", async (req: Request, res: Response) => {
 
 // import JSZip from "jszip";
 import archiver from "archiver";
-
+import { Readable } from "stream";
 router.get(
   "/reportes/pdf",
   async (req: Request, res: Response): Promise<void> => {
@@ -642,7 +642,7 @@ router.get(
             }
           );
 
-          const pdfBuffer = await page.pdf({
+          const pdfBuffer = await page.createPDFStream({
             format: "LETTER",
             printBackground: true,
             waitForFonts: true,
@@ -654,8 +654,8 @@ router.get(
           //   path: `report_${reporte.KioskId}_${index}.pdf`,
           //   pdf: pdfBuffer as Buffer,
           // });
-
-          archive.append(pdfBuffer as Buffer, {
+          const nodeReadableStream = Readable.fromWeb(pdfBuffer as any);
+          archive.append(nodeReadableStream, {
             name: `report_${reporte.KioskId}_${index}.pdf`,
           });
 
