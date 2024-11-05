@@ -658,6 +658,13 @@ router.get(
           archive.append(nodeReadableStream, {
             name: `report_${reporte.KioskId}_${index}.pdf`,
           });
+          nodeReadableStream.on("error", (err) => {
+            console.error(
+              `Error en el stream del reporte ${reporte._id}:`,
+              err
+            );
+            archive.destroy(err); // Esto emitirá 'error' en Archiver
+          });
 
           console.log(
             `PDF generado para el reporte ${reporte._id} index ${index}`
@@ -670,11 +677,29 @@ router.get(
           );
         }
       }
-      archive.finalize();
+      await new Promise<void>((resolve, reject) => {
+        archive
+          .finalize()
+          .then(() => {
+            console.log("Archivo ZIP finalizado.");
+          })
+          .catch((err) => {
+            console.error("Error al finalizar Archiver:", err);
+            reject(err);
+          });
 
-      await page.close();
-      // **6. Cierre del Navegador**
-      await browser.close();
+        archive.on("close", async () => {
+          await page.close();
+          await browser.close();
+          console.log("Puppeteer cerrado.");
+          resolve();
+        });
+
+        archive.on("error", (err) => {
+          console.error("Error en Archiver:", err);
+          reject(err);
+        });
+      });
 
       if (pdfs.length === 0) {
         res.status(500).json({ error: "No se pudieron generar los PDFs" });
