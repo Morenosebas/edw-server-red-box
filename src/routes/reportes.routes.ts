@@ -646,13 +646,9 @@ router.get(
             printBackground: true,
             waitForFonts: true,
             pageRanges: "1",
-            // Puedes ajustar otras opciones según tus necesidades
+            
           });
 
-          // pdfs.push({
-          //   path: `report_${reporte.KioskId}_${index}.pdf`,
-          //   pdf: pdfBuffer as Buffer,
-          // });
           const nodeReadableStream = Readable.fromWeb(pdfBuffer as any);
           archive.append(nodeReadableStream, {
             name: `report_${reporte.KioskId}_${index}.pdf`,
@@ -700,31 +696,6 @@ router.get(
         });
       });
 
-      if (pdfs.length === 0) {
-        res.status(500).json({ error: "No se pudieron generar los PDFs" });
-        return;
-      }
-      // **7. Creación del Archivo ZIP en Memoria**
-      // const zip = new JSZip();
-      // pdfs.forEach((pdf) => {
-      //   zip.file(pdf.path, pdf.pdf);
-      // });
-
-      // const zipContent = await zip.generateAsync({
-      //   type: "nodebuffer",
-      //   compression: "DEFLATE",
-      //   compressionOptions: { level: 9 },
-      // });
-
-      // **8. Configuración de las Cabeceras de Respuesta**
-      // res.set({
-      //   "Content-Type": "application/zip",
-      //   "Content-Disposition": `attachment; filename=reportes.zip`,
-      //   "Content-Length": zipContent.length,
-      // });
-
-      // **9. Envío del ZIP al Cliente**
-      // res.send(zipContent);
     } catch (error) {
       console.error("Error generando el PDF:", error);
       if (error instanceof Error) {
