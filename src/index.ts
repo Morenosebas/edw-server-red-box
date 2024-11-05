@@ -5,6 +5,8 @@ import morgan from "morgan";
 import db from "@mongo/mongo";
 import cors from "cors";
 import "@controllers/moment";
+// import chalk from "chalk";
+const chalk = require("chalk");
 db();
 dotenv.config();
 
@@ -25,11 +27,20 @@ morgan.token("id", function getId(req: Request) {
   return req.id;
 });
 app.use(
-  morgan(":method :url :status :body - :response-time ms", {
-    skip: function (req, res) {
-      return req.url.includes("api/imagen");
-    },
-  })
+  morgan(
+    chalk.blue(":method") +
+      " " +
+      chalk.green(":url") +
+      " " +
+      chalk.yellow(":status") +
+      " " +
+      chalk.magenta(":body") +
+      " - " +
+      chalk.cyan(":response-time ms"),
+    {
+      skip: (req, res) => req.url.includes("/redbox/api/imagen/"),
+    }
+  )
 );
 
 app.use(express.json());
